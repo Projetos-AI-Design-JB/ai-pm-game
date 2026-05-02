@@ -27,8 +27,7 @@ O projeto foi construído utilizando as melhores práticas do ecossistema React 
 ## 📂 Estrutura Relevante
 
 ```bash
-/src
-  /app
+  /src-app
     /ai-pm-game       # Rota principal do Simulador
       layout.tsx      # Configuração de SEO e Metadata da rota
       page.tsx        # Motor de cenários, lógicas matemáticas e UI
@@ -53,4 +52,4 @@ O projeto foi construído utilizando as melhores práticas do ecossistema React 
    `http://localhost:3000/ai-pm-game`
 
 ---
-*Desenvolvido com design premium via Next.js e Framer Motion*
+*Desenvolvido por JB*
