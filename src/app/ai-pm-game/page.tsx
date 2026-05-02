@@ -201,7 +201,7 @@ const INITIAL_ACCURACY = 60; // %
 const INITIAL_COMPLIANCE = 60; // %
 
 type GameState = {
-  view: 'intro' | 'playing' | 'results';
+  view: 'intro' | 'playing' | 'results' | 'quick_cases';
   currentPhaseIndex: number;
   activeScenarios: Scenario[];
   budget: number;
@@ -209,6 +209,153 @@ type GameState = {
   accuracy: number;
   compliance: number;
   history: Array<{ scenario: Scenario, option: ScenarioOption }>;
+};
+
+const QUICK_CASES = [
+  {
+    id: 1,
+    title: 'O Dilema do Consultor Financeiro (Personalização em Escala)',
+    businessProblem: 'Um consultor financeiro precisa traduzir rapidamente uma nova pesquisa de mercado em uma ideia de investimento validada e personalizada para um cliente com necessidades específicas e perfil de risco estrito.',
+    architecture: 'RAG (Retrieval-Augmented Generation) com Arquitetura de Duplo Contexto.',
+    dataSources: 'O modelo busca simultaneamente no banco vetorial 1 (Relatórios de Market Research aprovados pela corretora) e no banco vetorial 2 (CRM com o perfil de risco, liquidez e restrições do cliente).',
+    ux: 'Interface de "Copiloto" (Human-in-the-loop). A IA gera o rascunho da tese de investimento, mas o envio ao cliente nunca é automatizado. O consultor deve revisar e aprovar (clique único).',
+    tradeoff: 'Automação vs. Compliance (Risco Fiduciário). Se automatizar o envio (Agente Autônomo), ganha-se escala máxima, mas a corretora corre risco de processo na CVM/SEC se a IA alucinar uma recomendação fora do perfil de risco. A escolha certa é travar o produto no modo Copiloto.'
+  },
+  {
+    id: 2,
+    title: 'Síntese de Cenário Macro e Geopolítico',
+    businessProblem: 'O consultor precisa redigir um relatório abrangente e bem fundamentado sobre um tópico político complexo e em alta (ex: novas tarifas de importação) que está impactando os mercados financeiros globais.',
+    architecture: 'Agentes de Pesquisa Web Autônomos (Web-Search Agents) combinados com Prompting Estruturado.',
+    dataSources: 'Conexão com APIs de notícias em tempo real (ex: Perplexity API, Bloomberg, Reuters) para evitar o "cutoff" (limite de data) dos modelos de linguagem padrão.',
+    ux: 'O PM deve exigir que o output da IA utilize Citations (citações inline). Cada afirmação gerada pela IA deve vir com um link clicável para a fonte original da notícia.',
+    tradeoff: 'Latência & OpEx vs. Viés de Informação. Usar múltiplos agentes para cruzar fontes e evitar fake news aumenta o custo da API (OpEx) e faz o relatório demorar minutos para ser gerado. Além disso, modelos de IA podem carregar vieses políticos embutidos em seus pesos, exigindo prompts rigorosos de neutralidade.'
+  },
+  {
+    id: 3,
+    title: 'O Desafio do E-commerce Multimodal',
+    businessProblem: 'Uma gigante do varejo de moda quer gerar automaticamente descrições de produtos, tags de SEO e traduções locais (gírias regionais) para 50.000 novas peças de roupa por mês, possuindo apenas a foto do produto e a ficha técnica da fábrica (tecido e cor).',
+    architecture: 'Pipeline Multimodal (Vision LLM + Fine-Tuning).',
+    dataSources: 'Um modelo de visão (ex: GPT-4o ou Claude 3.5 Sonnet) analisa a foto para identificar o caimento e estilo, cruzando com a ficha técnica em texto.',
+    ux: 'Processamento em lote (Batch Processing) no backend. A equipe de cadastro recebe os 50.000 SKUs preenchidos no ERP no dia seguinte.',
+    tradeoff: 'OpEx (Custo de Visão) vs. Fine-Tuning. Rodar 50.000 imagens mensais em uma API de Visão comercial destruirá o orçamento (OpEx altíssimo). A solução de PM de elite é usar a API cara apenas para gerar um dataset de 2.000 peças perfeitas e usar isso para fazer o Fine-Tuning de um modelo open-source menor e mais barato rodando em infraestrutura própria.'
+  },
+  {
+    id: 4,
+    title: 'O Agente Autônomo na Saúde (Healthcare)',
+    businessProblem: 'A administração de uma rede de hospitais quer reduzir o número de faltas (no-shows) em consultas. Eles querem uma IA que analise o histórico do paciente, preveja quem tem chance de faltar e inicie uma conversa no WhatsApp para reagendar ou confirmar a presença.',
+    architecture: 'IA Preditiva (Machine Learning Clássico) acoplada a um Agente de IA Generativa.',
+    dataSources: 'ERP Hospitalar (frequência passada, distância do paciente até o hospital, especialidade médica).',
+    ux: 'O Agente usa a API do WhatsApp. Se o paciente disser "Não posso ir, meu carro quebrou", o Agente entende a intenção, acessa o banco de dados do calendário médico via API (Tool Calling) e oferece novos horários em tempo real.',
+    tradeoff: 'Privacidade (LGPD/HIPAA) vs. Personalização. O paciente pode começar a mandar fotos de exames ou falar sobre sintomas graves no WhatsApp do robô de agendamento. O PM deve projetar Guardrails rígidos para a IA recusar diagnóstico médico e focar estritamente na agenda, além de garantir que dados sensíveis de saúde não sejam usados para treinar modelos de terceiros.'
+  },
+  {
+    id: 5,
+    title: 'Triagem de Recrutamento Tech (HR Tech)',
+    businessProblem: 'O departamento de RH recebe 10.000 currículos para uma vaga de desenvolvedor. Eles querem uma IA para ler os PDFs, ranquear os 50 melhores e conduzir uma entrevista inicial por chat para testar a lógica do candidato antes de passar para um recrutador humano.',
+    architecture: 'OCR para extrair texto -> RAG para comparar com a vaga -> Agente Conversacional (Chatbot).',
+    dataSources: 'PDFs dos candidatos e repositório de perguntas técnicas da empresa.',
+    ux: 'O candidato pré-selecionado recebe um link seguro para um chat cronometrado. A IA faz perguntas com base nas habilidades que o candidato alegou ter no currículo.',
+    tradeoff: 'Viés Algorítmico e Risco Legal. Avaliar seres humanos via IA é considerado "Alto Risco" (EU AI Act). Se o modelo penalizar currículos de mulheres ou minorias porque foi treinado com dados históricos enviesados da própria empresa, a corporação sofrerá danos imensos à reputação. O PM deve priorizar auditoria de viés e não deixar a decisão de eliminação ser 100% automatizada.'
+  }
+];
+
+const QuickCasesView = ({ onBack }: { onBack: () => void }) => {
+  const [activeCase, setActiveCase] = useState<number | null>(null);
+  const [revealed, setRevealed] = useState(false);
+
+  return (
+    <motion.section key="quick_cases" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-4xl mx-auto">
+      <button onClick={onBack} className="mb-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+        <FiArrowLeft /> Voltar ao Menu
+      </button>
+
+      <div className="text-center mb-10">
+        <h2 className="text-4xl font-black text-white mb-4">QUICK CASES <span className="text-blue-500">TRAINING</span></h2>
+        <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          O usuário lê o problema e precisa estruturar a solução (Arquitetura, UX e Risco) em poucos minutos. Treine seu raciocínio rápido.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {QUICK_CASES.map((qcase, idx) => (
+          <div key={qcase.id} className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden transition-all">
+            <button 
+              onClick={() => {
+                setActiveCase(activeCase === qcase.id ? null : qcase.id);
+                setRevealed(false);
+              }}
+              className="w-full text-left p-6 md:p-8 hover:bg-slate-800/50 transition-colors flex justify-between items-center"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 font-black text-xl">
+                  {idx + 1}
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white pr-4">{qcase.title}</h3>
+              </div>
+              <FiArrowRight className={`text-slate-500 text-2xl transition-transform ${activeCase === qcase.id ? 'rotate-90 text-white' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+              {activeCase === qcase.id && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }} 
+                  animate={{ height: 'auto', opacity: 1 }} 
+                  exit={{ height: 0, opacity: 0 }}
+                  className="px-6 md:px-8 pb-8"
+                >
+                  <div className="bg-slate-950/50 rounded-2xl p-6 md:p-8 border border-slate-800 mb-6">
+                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">Problema de Negócio</h4>
+                    <p className="text-slate-200 text-lg md:text-xl leading-relaxed">{qcase.businessProblem}</p>
+                  </div>
+
+                  {!revealed ? (
+                    <div className="flex justify-center py-6">
+                      <button 
+                        onClick={() => setRevealed(true)}
+                        className="group bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-2xl transition-all scale-105 shadow-xl shadow-blue-500/20 flex items-center gap-2"
+                      >
+                        REVELAR SOLUÇÃO <FiBriefcase className="group-hover:scale-110 transition-transform" />
+                      </button>
+                    </div>
+                  ) : (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-blue-400 uppercase tracking-widest mb-3">
+                          <FiCpu /> Abordagem / Arquitetura
+                        </h4>
+                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.architecture}</p>
+                      </div>
+                      
+                      <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-400 uppercase tracking-widest mb-3">
+                          <FiDatabase /> Fontes de Dados
+                        </h4>
+                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.dataSources}</p>
+                      </div>
+
+                      <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-purple-400 uppercase tracking-widest mb-3">
+                          <FiTarget /> UX / Execução
+                        </h4>
+                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.ux}</p>
+                      </div>
+
+                      <div className="bg-rose-500/10 rounded-xl p-6 border border-rose-500/20">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-rose-400 uppercase tracking-widest mb-3">
+                          <FiAlertCircle /> Trade-off Principal
+                        </h4>
+                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.tradeoff}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+    </motion.section>
+  );
 };
 
 export default function AIPMGame() {
@@ -345,11 +492,21 @@ export default function AIPMGame() {
                 <p className="text-lg text-slate-400 mb-8 leading-relaxed max-w-2xl mx-auto">
                   A cada "run", 4 crises aleatórias do banco de 12 cenários corporativos cruzarão sua mesa. Suas escolhas definem se a IA da GlobalBev vai falir a empresa, gerar revoltas do sindicato, vazar dados na internet ou se tornar o maior case de B2B do mercado.
                 </p>
-                <button onClick={startGame} className="mx-auto group bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 px-12 rounded-2xl flex items-center gap-3 transition-all scale-105 shadow-xl shadow-blue-500/20">
-                  INICIAR JORNADA <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                <div className="flex flex-col md:flex-row justify-center items-center gap-4">
+                  <button onClick={startGame} className="group bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 px-10 rounded-2xl flex items-center gap-3 transition-all scale-105 shadow-xl shadow-blue-500/20">
+                    INICIAR JORNADA <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button onClick={() => setState(prev => ({ ...prev, view: 'quick_cases' }))} className="group bg-slate-800 hover:bg-slate-700 text-white font-bold py-5 px-10 rounded-2xl flex items-center gap-3 transition-all hover:scale-105 border border-slate-700">
+                    <FiBriefcase className="text-blue-400 group-hover:scale-110 transition-transform" /> QUICK CASES
+                  </button>
+                </div>
               </div>
             </motion.section>
+          )}
+
+          {/* VIEW: QUICK CASES */}
+          {state.view === 'quick_cases' && (
+            <QuickCasesView onBack={() => setState(prev => ({ ...prev, view: 'intro' }))} />
           )}
 
           {/* VIEW: PLAYING */}
