@@ -216,51 +216,77 @@ const QUICK_CASES = [
     id: 1,
     title: 'O Dilema do Consultor Financeiro (Personalização em Escala)',
     businessProblem: 'Um consultor financeiro precisa traduzir rapidamente uma nova pesquisa de mercado em uma ideia de investimento validada e personalizada para um cliente com necessidades específicas e perfil de risco estrito.',
+    options: [
+      { id: 'A', label: 'Automação Total', desc: 'Criar um Agente Autônomo que envia a tese de investimento direto para o email do cliente visando escala máxima.', isCorrect: false },
+      { id: 'B', label: 'Interface Copiloto', desc: 'A IA rascunha a tese cruzando a pesquisa e o CRM, mas o envio requer aprovação manual do consultor.', isCorrect: true },
+      { id: 'C', label: 'Chatbot Self-Service', desc: 'Forçar os clientes a interagirem com um Chatbot GenAI da corretora para descobrirem sozinhos os investimentos.', isCorrect: false }
+    ],
     architecture: 'RAG (Retrieval-Augmented Generation) com Arquitetura de Duplo Contexto.',
-    dataSources: 'O modelo busca simultaneamente no banco vetorial 1 (Relatórios de Market Research aprovados pela corretora) e no banco vetorial 2 (CRM com o perfil de risco, liquidez e restrições do cliente).',
-    ux: 'Interface de "Copiloto" (Human-in-the-loop). A IA gera o rascunho da tese de investimento, mas o envio ao cliente nunca é automatizado. O consultor deve revisar e aprovar (clique único).',
-    tradeoff: 'Automação vs. Compliance (Risco Fiduciário). Se automatizar o envio (Agente Autônomo), ganha-se escala máxima, mas a corretora corre risco de processo na CVM/SEC se a IA alucinar uma recomendação fora do perfil de risco. A escolha certa é travar o produto no modo Copiloto.'
+    dataSources: 'O modelo busca simultaneamente no banco vetorial 1 (Relatórios de Market Research aprovados) e no banco vetorial 2 (CRM com o perfil do cliente).',
+    ux: 'Interface de "Copiloto" (Human-in-the-loop). A IA gera o rascunho da tese, mas o envio nunca é automatizado. O consultor revisa (clique único).',
+    tradeoff: 'Automação vs. Compliance (Risco Fiduciário). Automatizar o envio (Agente) gera escala, mas a corretora corre risco de processo na CVM se a IA alucinar.'
   },
   {
     id: 2,
     title: 'Síntese de Cenário Macro e Geopolítico',
-    businessProblem: 'O consultor precisa redigir um relatório abrangente e bem fundamentado sobre um tópico político complexo e em alta (ex: novas tarifas de importação) que está impactando os mercados financeiros globais.',
+    businessProblem: 'O consultor precisa redigir um relatório abrangente sobre um tópico político complexo e em alta (ex: novas tarifas) que está impactando os mercados.',
+    options: [
+      { id: 'A', label: 'Fine-Tuning Semanal', desc: 'Fazer Fine-Tuning de um modelo LLaMA local semanalmente com as notícias para o modelo aprender os fatos novos.', isCorrect: false },
+      { id: 'B', label: 'Agentes de Pesquisa Web', desc: 'Usar agentes autônomos para cruzar fontes na internet em tempo real, exigindo citações (Citations) nos outputs.', isCorrect: true },
+      { id: 'C', label: 'RAG Estático', desc: 'Usar RAG tradicional carregando PDFs antigos de macroeconomia global no banco vetorial e ignorar as notícias diárias.', isCorrect: false }
+    ],
     architecture: 'Agentes de Pesquisa Web Autônomos (Web-Search Agents) combinados com Prompting Estruturado.',
-    dataSources: 'Conexão com APIs de notícias em tempo real (ex: Perplexity API, Bloomberg, Reuters) para evitar o "cutoff" (limite de data) dos modelos de linguagem padrão.',
-    ux: 'O PM deve exigir que o output da IA utilize Citations (citações inline). Cada afirmação gerada pela IA deve vir com um link clicável para a fonte original da notícia.',
-    tradeoff: 'Latência & OpEx vs. Viés de Informação. Usar múltiplos agentes para cruzar fontes e evitar fake news aumenta o custo da API (OpEx) e faz o relatório demorar minutos para ser gerado. Além disso, modelos de IA podem carregar vieses políticos embutidos em seus pesos, exigindo prompts rigorosos de neutralidade.'
+    dataSources: 'Conexão com APIs de notícias em tempo real (ex: Perplexity, Bloomberg) para evitar o "cutoff" de data.',
+    ux: 'O PM deve exigir que o output utilize Citations (citações inline). Cada afirmação deve vir com um link clicável para a fonte.',
+    tradeoff: 'Latência & OpEx vs. Viés. Múltiplos agentes cruzando fontes evitam fake news, mas aumentam custos de API e o relatório demora a ser gerado.'
   },
   {
     id: 3,
     title: 'O Desafio do E-commerce Multimodal',
-    businessProblem: 'Uma gigante do varejo de moda quer gerar automaticamente descrições de produtos, tags de SEO e traduções locais (gírias regionais) para 50.000 novas peças de roupa por mês, possuindo apenas a foto do produto e a ficha técnica da fábrica (tecido e cor).',
+    businessProblem: 'Uma gigante do varejo quer gerar automaticamente descrições, tags de SEO e traduções locais para 50.000 novas peças de roupa por mês usando apenas foto e ficha técnica.',
+    options: [
+      { id: 'A', label: 'Visão em Tempo Real', desc: 'Usar a API comercial do GPT-4o (Vision) em produção para processar as 50.000 imagens mensais sob demanda.', isCorrect: false },
+      { id: 'B', label: 'Pipeline Híbrido (Fine-Tuning)', desc: 'Usar a API Vision apenas para criar um dataset dourado de 2.000 peças, e fazer Fine-Tuning de um modelo open-source menor.', isCorrect: true },
+      { id: 'C', label: 'Força Bruta Humana', desc: 'Desistir da IA e contratar uma equipe massiva de freelancers para escrever as descrições manualmente.', isCorrect: false }
+    ],
     architecture: 'Pipeline Multimodal (Vision LLM + Fine-Tuning).',
-    dataSources: 'Um modelo de visão (ex: GPT-4o ou Claude 3.5 Sonnet) analisa a foto para identificar o caimento e estilo, cruzando com a ficha técnica em texto.',
-    ux: 'Processamento em lote (Batch Processing) no backend. A equipe de cadastro recebe os 50.000 SKUs preenchidos no ERP no dia seguinte.',
-    tradeoff: 'OpEx (Custo de Visão) vs. Fine-Tuning. Rodar 50.000 imagens mensais em uma API de Visão comercial destruirá o orçamento (OpEx altíssimo). A solução de PM de elite é usar a API cara apenas para gerar um dataset de 2.000 peças perfeitas e usar isso para fazer o Fine-Tuning de um modelo open-source menor e mais barato rodando em infraestrutura própria.'
+    dataSources: 'Um modelo de visão analisa a foto para identificar caimento e estilo, cruzando com a ficha técnica em texto.',
+    ux: 'Processamento em lote (Batch Processing) no backend. A equipe recebe os 50.000 SKUs preenchidos no ERP no dia seguinte.',
+    tradeoff: 'OpEx (Custo de Visão) vs. Fine-Tuning. Rodar 50k imagens em uma API comercial destrói o orçamento. A solução de elite cria seu próprio modelo destilado.'
   },
   {
     id: 4,
     title: 'O Agente Autônomo na Saúde (Healthcare)',
-    businessProblem: 'A administração de uma rede de hospitais quer reduzir o número de faltas (no-shows) em consultas. Eles querem uma IA que analise o histórico do paciente, preveja quem tem chance de faltar e inicie uma conversa no WhatsApp para reagendar ou confirmar a presença.',
+    businessProblem: 'A rede de hospitais quer prever quais pacientes têm chance de faltar (no-show) e iniciar uma conversa no WhatsApp para reagendar.',
+    options: [
+      { id: 'A', label: 'IA Preditiva + Agente Rígido', desc: 'IA Preditiva acha o risco; Agente conversa no Whatsapp com Tool Calling para agenda, tendo Guardrails rígidos contra diagnóstico.', isCorrect: true },
+      { id: 'B', label: 'Agente de Voz Ativo', desc: 'Um Agente de Voz liga pro paciente e analisa pelo tom de voz se ele vai faltar, aproveitando para prescrever vitaminas básicas.', isCorrect: false },
+      { id: 'C', label: 'SMS em Massa Básico', desc: 'Disparar SMS fixo para todos os pacientes 2 dias antes, usando a IA apenas para traduzir o texto para outros idiomas.', isCorrect: false }
+    ],
     architecture: 'IA Preditiva (Machine Learning Clássico) acoplada a um Agente de IA Generativa.',
     dataSources: 'ERP Hospitalar (frequência passada, distância do paciente até o hospital, especialidade médica).',
-    ux: 'O Agente usa a API do WhatsApp. Se o paciente disser "Não posso ir, meu carro quebrou", o Agente entende a intenção, acessa o banco de dados do calendário médico via API (Tool Calling) e oferece novos horários em tempo real.',
-    tradeoff: 'Privacidade (LGPD/HIPAA) vs. Personalização. O paciente pode começar a mandar fotos de exames ou falar sobre sintomas graves no WhatsApp do robô de agendamento. O PM deve projetar Guardrails rígidos para a IA recusar diagnóstico médico e focar estritamente na agenda, além de garantir que dados sensíveis de saúde não sejam usados para treinar modelos de terceiros.'
+    ux: 'O Agente usa a API do WhatsApp. Se o paciente não puder ir, ele acessa o calendário via API (Tool Calling) e oferece novos horários.',
+    tradeoff: 'Privacidade (LGPD/HIPAA) vs. Personalização. O paciente pode falar de sintomas graves; o PM precisa de Guardrails que recusem diagnóstico estritamente.'
   },
   {
     id: 5,
     title: 'Triagem de Recrutamento Tech (HR Tech)',
-    businessProblem: 'O departamento de RH recebe 10.000 currículos para uma vaga de desenvolvedor. Eles querem uma IA para ler os PDFs, ranquear os 50 melhores e conduzir uma entrevista inicial por chat para testar a lógica do candidato antes de passar para um recrutador humano.',
+    businessProblem: 'O RH recebe 10.000 currículos para desenvolvedor. Eles querem uma IA para ler PDFs, ranquear os melhores e conduzir uma entrevista por chat.',
+    options: [
+      { id: 'A', label: 'Automação Total de Eliminação', desc: 'Usar a IA para reprovar 100% dos candidatos fora do perfil já na leitura do PDF e contratar direto os sobreviventes.', isCorrect: false },
+      { id: 'B', label: 'Assistência com Intervenção Humana', desc: 'Fazer OCR + RAG para o ranking e Chatbot técnico; mas a eliminação de candidatos nunca é 100% automatizada (AI Act).', isCorrect: true },
+      { id: 'C', label: 'Medição por Voz (NLP)', desc: 'Exigir um áudio de 5 min pelo Whatsapp e usar NLP para medir a "confiança" deles na vaga em vez de avaliar código.', isCorrect: false }
+    ],
     architecture: 'OCR para extrair texto -> RAG para comparar com a vaga -> Agente Conversacional (Chatbot).',
     dataSources: 'PDFs dos candidatos e repositório de perguntas técnicas da empresa.',
-    ux: 'O candidato pré-selecionado recebe um link seguro para um chat cronometrado. A IA faz perguntas com base nas habilidades que o candidato alegou ter no currículo.',
-    tradeoff: 'Viés Algorítmico e Risco Legal. Avaliar seres humanos via IA é considerado "Alto Risco" (EU AI Act). Se o modelo penalizar currículos de mulheres ou minorias porque foi treinado com dados históricos enviesados da própria empresa, a corporação sofrerá danos imensos à reputação. O PM deve priorizar auditoria de viés e não deixar a decisão de eliminação ser 100% automatizada.'
+    ux: 'O candidato pré-selecionado recebe um link seguro para um chat cronometrado. A IA faz perguntas com base nas habilidades alegadas.',
+    tradeoff: 'Viés Algorítmico e Risco Legal. Avaliar humanos por IA é "Alto Risco". Se o modelo penalizar minorias, a corporação sofre. Priorizar auditoria de viés.'
   }
 ];
 
 const QuickCasesView = ({ onBack }: { onBack: () => void }) => {
   const [activeCase, setActiveCase] = useState<number | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
 
   return (
@@ -309,42 +335,89 @@ const QuickCasesView = ({ onBack }: { onBack: () => void }) => {
                   </div>
 
                   {!revealed ? (
-                    <div className="flex justify-center py-6">
-                      <button 
-                        onClick={() => setRevealed(true)}
-                        className="group bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-2xl transition-all scale-105 shadow-xl shadow-blue-500/20 flex items-center gap-2"
-                      >
-                        REVELAR SOLUÇÃO <FiBriefcase className="group-hover:scale-110 transition-transform" />
-                      </button>
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Escolha a Melhor Estratégia de Produto:</h4>
+                      {qcase.options.map(opt => (
+                        <button 
+                          key={opt.id}
+                          onClick={() => {
+                            setSelectedOption(opt.id);
+                            setRevealed(true);
+                          }}
+                          className="w-full text-left p-5 rounded-2xl border-2 border-slate-800 bg-slate-900/40 hover:bg-slate-800/80 hover:border-blue-500/50 transition-all group"
+                        >
+                          <div className="flex items-start gap-4">
+                            <span className="w-8 h-8 flex-shrink-0 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold group-hover:bg-blue-500 group-hover:text-white transition-colors">{opt.id}</span>
+                            <div>
+                              <h5 className="font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">{opt.label}</h5>
+                              <p className="text-slate-400 text-sm leading-relaxed">{opt.desc}</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   ) : (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-blue-400 uppercase tracking-widest mb-3">
-                          <FiCpu /> Abordagem / Arquitetura
-                        </h4>
-                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.architecture}</p>
-                      </div>
-                      
-                      <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-400 uppercase tracking-widest mb-3">
-                          <FiDatabase /> Fontes de Dados
-                        </h4>
-                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.dataSources}</p>
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                      {/* Feedback Banner */}
+                      {(() => {
+                        const picked = qcase.options.find(o => o.id === selectedOption);
+                        if (!picked) return null;
+                        return picked.isCorrect ? (
+                          <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex items-center gap-4">
+                            <div className="w-10 h-10 flex-shrink-0 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400"><FiTarget size={20} /></div>
+                            <div>
+                              <h4 className="font-bold text-emerald-400">Excelente! Decisão de PM de Elite.</h4>
+                              <p className="text-emerald-400/80 text-sm">Você compreendeu perfeitamente os trade-offs.</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-xl flex items-center gap-4">
+                            <div className="w-10 h-10 flex-shrink-0 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400"><FiAlertCircle size={20} /></div>
+                            <div>
+                              <h4 className="font-bold text-rose-400">Escolha Arriscada ou Ineficiente.</h4>
+                              <p className="text-rose-400/80 text-sm">Essa abordagem cria problemas sérios de arquitetura ou compliance.</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                          <h4 className="flex items-center gap-2 text-sm font-bold text-blue-400 uppercase tracking-widest mb-3">
+                            <FiCpu /> Abordagem / Arquitetura
+                          </h4>
+                          <p className="text-slate-300 leading-relaxed font-medium">{qcase.architecture}</p>
+                        </div>
+                        
+                        <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                          <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-400 uppercase tracking-widest mb-3">
+                            <FiDatabase /> Fontes de Dados
+                          </h4>
+                          <p className="text-slate-300 leading-relaxed font-medium">{qcase.dataSources}</p>
+                        </div>
+
+                        <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                          <h4 className="flex items-center gap-2 text-sm font-bold text-purple-400 uppercase tracking-widest mb-3">
+                            <FiTarget /> UX / Execução
+                          </h4>
+                          <p className="text-slate-300 leading-relaxed font-medium">{qcase.ux}</p>
+                        </div>
+
+                        <div className="bg-rose-500/10 rounded-xl p-6 border border-rose-500/20">
+                          <h4 className="flex items-center gap-2 text-sm font-bold text-rose-400 uppercase tracking-widest mb-3">
+                            <FiAlertCircle /> O Trade-off Real
+                          </h4>
+                          <p className="text-slate-300 leading-relaxed font-medium">{qcase.tradeoff}</p>
+                        </div>
                       </div>
 
-                      <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-purple-400 uppercase tracking-widest mb-3">
-                          <FiTarget /> UX / Execução
-                        </h4>
-                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.ux}</p>
-                      </div>
-
-                      <div className="bg-rose-500/10 rounded-xl p-6 border border-rose-500/20">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-rose-400 uppercase tracking-widest mb-3">
-                          <FiAlertCircle /> Trade-off Principal
-                        </h4>
-                        <p className="text-slate-300 leading-relaxed font-medium">{qcase.tradeoff}</p>
+                      <div className="flex justify-center pt-4">
+                        <button 
+                          onClick={() => { setRevealed(false); setSelectedOption(null); }} 
+                          className="text-sm font-bold text-slate-500 hover:text-white transition-colors"
+                        >
+                          Refazer Desafio
+                        </button>
                       </div>
                     </motion.div>
                   )}
